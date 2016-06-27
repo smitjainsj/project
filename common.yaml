@@ -8,8 +8,10 @@ nginx::nginx_vhosts:
     location_custom_cfg:
       "proxy_pass": 'http://companynews'
 nginx::nginx_locations:
-  'companyNews':
+  'companynews':
     location: 'companynews'
     vhost: 'companynews.example.com'
     location_custom_cfg:
       "proxy_pass": 'http://companynews'
+    location: '~\.(css|png)'
+    www_root: '/var/www/html'
