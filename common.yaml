@@ -1,5 +1,5 @@
 nginx::nginx_upstreams:
-  'companynews':
+  'companyNews':
      ensure: present
      members:
       - localhost:8080
@@ -8,8 +8,8 @@ nginx::nginx_vhosts:
     location_custom_cfg:
       "proxy_pass": 'http://companynews'
 nginx::nginx_locations:
-  'companynews':
-    location: 'companynews'
+  'companyNews':
+    location: 'companyNews'
     vhost: 'companynews.example.com'
     location_custom_cfg:
       "proxy_pass": 'http://companynews'
