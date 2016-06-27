@@ -13,7 +13,7 @@ tomcat::instance {'tomcat1':
   http_port   => '8080',
 	}
 
-exec {'tocmat'
+exec {'tocmat':
 	command => '/bin/cp /opt/companyNews.war /opt/apache-tomcat/webapps \
 		bash /opt/apache-tomcat/bin/startup.sh ' ,
 	require => Class['tomcat'], 
