@@ -38,7 +38,7 @@ cp -r /tmp/static/* /var/www/html/companyNews
 
 puppet apply /etc/puppet/manifests/site.pp --debug 
 
-cp /opt/companyNews.war /opt/apache-tomcat/webapps
+cp /tmp/companyNews.war /opt/apache-tomcat/webapps
 
 bash /opt/apache-tomcat/bin/startup.sh
 
