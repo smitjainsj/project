@@ -20,32 +20,50 @@ puppet module install jfryman-nginx > /dev/null 2>&1
 puppet module install puppetlabs-java > /dev/null 2>&1 
 puppet module install camptocamp-tomcat > /dev/null 2>&1
 
-cd /etc/puppet
 if [ -d "/etc/puppet/project" ]
 then
+	echo "GIT REPO ALREADY PRESENT."
+else
 	echo "Cloning Git Repo ... "
-	git clone  -b dev https://github.com/smitjainsj/project
-	cp project/*.yaml /etc/puppet
-	cp project/site.pp /etc/puppet/manifests
+	cd /etc/puppet
+        git clone  -b dev https://github.com/smitjainsj/project 
+
+fi
+
+if [ -f "/etc/puppet/hiera.yaml" ]
+then
+	echo "Hiera File Present"
+else
+	/bin/cp /etc/puppet/project/*.yaml /etc/puppet
+	/bin/cp /etc/puppet/project/site.pp /etc/puppet/manifests
 fi
 
 
-if [ -f "/tmp/companyNews.war"]
+if [ -f "/tmp/companyNews.war" ]
 then
+	echo "WAR File already downloaded"
+else 
 	echo "Downloading Artifacts ...."
 	wget https://s3.amazonaws.com/infra-assessment/companyNews.war -P /tmp > /dev/null 2>&1
 	wget https://s3.amazonaws.com/infra-assessment/static.zip -P /tmp > /dev/null 2>&1
-	unzip /tmp/static.zip
+	/usr/bin/unzip /tmp/static.zip
 	mkdir -p /var/www/html/companyNews
-	cp -r /tmp/static/* /var/www/html/companyNews
-else
-	echo "WAR File already downloaded"
+	/bin/cp -r /tmp/static/* /var/www/html/companyNews
 fi
 
-puppet apply /etc/puppet/manifests/site.pp --debug 
+if [ -f "/etc/puppet/manifests/site.pp" ]
+then
+	puppet apply /etc/puppet/manifests/site.pp --debug 
+else
+	echo "Site.pp File missing .... "
+fi
 
-cp /tmp/companyNews.war /opt/apache-tomcat/webapps
-
-bash /opt/apache-tomcat/bin/startup.sh
-
+if [ -d "/etc/apache-tocmat-* " ]
+then
+	echo "Deploying Webapp"
+	/bin/cp /tmp/companyNews.war /opt/apache-tomcat/webapps
+	bash /opt/apache-tomcat/bin/startup.sh
+else
+	echo "CANNOT DEPLOY WEBAPP, APACHE NOT FOUND!!! "
+fi
 
