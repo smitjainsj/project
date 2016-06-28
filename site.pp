@@ -13,6 +13,10 @@ class { 'tomcat':
 	  http_port   => '8080',
 	}
 
+	service  {'tomcat-tomcat1':
+		ensure => 'stopped'
+	}
+
 #	exec {'tocmat':
 #		command => '/bin/cp /opt/companyNews.war /opt/apache-tomcat/webapps \
 #			bash /opt/apache-tomcat/bin/startup.sh ' ,
