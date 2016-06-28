@@ -9,7 +9,7 @@ echo "Checking Puppet Package ..."
 if [ $(dpkg-query -W -f='${Status}' puppet 2>/dev/null | grep -c "ok installed") -eq 0 ];
 then
   echo -e "Installing Puppet ..."
-  apt-get install puppet;
+  apt-get -y install puppet;
 else
  echo -e "Puppet is already installed ..."
  puppet -V
@@ -21,20 +21,26 @@ puppet module install puppetlabs-java > /dev/null 2>&1
 puppet module install camptocamp-tomcat > /dev/null 2>&1
 
 cd /etc/puppet
-echo "Cloning Git Repo ... "
-git clone  -b dev https://github.com/smitjainsj/project
+if [ -d "/etc/puppet/project" ]
+then
+	echo "Cloning Git Repo ... "
+	git clone  -b dev https://github.com/smitjainsj/project
+	cp project/*.yaml /etc/puppet
+	cp project/site.pp /etc/puppet/manifests
+fi
 
-cp project/*.yaml /etc/puppet
-cp project/site.pp /etc/puppet/manifests
 
-echo "Downloading Artifacts ...."
-
-wget https://s3.amazonaws.com/infra-assessment/companyNews.war -P /tmp > /dev/null 2>&1
-wget https://s3.amazonaws.com/infra-assessment/static.zip -P /tmp > /dev/null 2>&1
-
-unzip /tmp/static.zip
-mkdir -p /var/www/html/companyNews
-cp -r /tmp/static/* /var/www/html/companyNews
+if [ -f "/tmp/companyNews.war"]
+then
+	echo "Downloading Artifacts ...."
+	wget https://s3.amazonaws.com/infra-assessment/companyNews.war -P /tmp > /dev/null 2>&1
+	wget https://s3.amazonaws.com/infra-assessment/static.zip -P /tmp > /dev/null 2>&1
+	unzip /tmp/static.zip
+	mkdir -p /var/www/html/companyNews
+	cp -r /tmp/static/* /var/www/html/companyNews
+else
+	echo "WAR File already downloaded"
+fi
 
 puppet apply /etc/puppet/manifests/site.pp --debug 
 
