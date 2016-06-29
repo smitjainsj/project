@@ -5,13 +5,16 @@ nginx::nginx_upstreams:
       - localhost:8080
 nginx::nginx_vhosts:
   'companynews.example.com':
-    location_custom_cfg:
-      "proxy_pass": 'http://companynews'
+     location_custom_cfg:
+      "rewrite":
+        "^ http://$host/companyNews$request_uri? permanent"
 nginx::nginx_locations:
   'companyNews':
-    location: 'companyNews'
+    location: '/companyNews'
     vhost: 'companynews.example.com'
     location_custom_cfg:
-      "proxy_pass": 'http://companynews'
+      "proxy_pass": 'http://companyNews'
+  'companyNews1':
     location: '~\.(css|png)'
+    vhost: 'companynews.example.com'
     www_root: '/var/www/html'
