@@ -1,27 +1,28 @@
 node default {
 
-        class { 'java': distribution => 'jdk' } -> class { 'nginx' : }
+class { 'java': distribution => 'jdk' } -> class { 'nginx' : }
+
 
 class { 'tomcat':
   version     => 7,
   sources     => true,
   sources_src => 'http://archive.apache.org/dist/tomcat/',
-  require => Service['nginx'],
-}
-
-tomcat::instance {'companynews':
-  ensure      => present,
-  server_port => '8005',
-  http_port   => '8080',
-  ajp_port    => '8009',
-  before => Exec['deploy'],
-}
-
-exec{'deploy':
-	command => "/bin/cp /tmp/companyNews.war /opt/apache-tomcat/webapps \
-			bash /opt/apache-tomcat/bin/startup.sh " ,
-	}
-
 }
 
 
+file{'/opt/apache-tomcat/webapps/companyNews.war':
+ ensure => 'present' ,
+ mode => '0755',
+ owner => 'root',
+ group => 'root',
+ source =>  'puppet:///modules/tomcat/companyNews.war' ,
+ }
+
+	exec{'deploy':
+		path   => '/usr/bin:/usr/sbin:/bin:/sbin',
+		command => '/bin/bash /opt/apache-tomcat*/bin/startup.sh', 
+#		unless =>  "test `ps -ef | grep tomcat |wc -l` -eq 0 " ,
+		}
+
+
+}
