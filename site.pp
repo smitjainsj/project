@@ -21,8 +21,10 @@ file{'/opt/apache-tomcat/webapps/companyNews.war':
 	exec{'deploy':
 		path   => '/usr/bin:/usr/sbin:/bin:/sbin',
 		command => '/bin/bash /opt/apache-tomcat*/bin/startup.sh', 
-		onlyif  =>  "/bin ls /opt/apache-tomcat/webapps/companyNews.war" ,
-		}
+		onlyif  =>  "/bin/ls /opt/apache-tomcat/webapps/companyNews.war" ,
+		require => File['/opt/apache-tomcat/webapps/companyNews.war'],	
+            }
+
 
 
 }
