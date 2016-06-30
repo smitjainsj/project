@@ -97,6 +97,8 @@ var.public_key_path
   Example: ~/.ssh/terraform.pub
 
   Enter a value: /opt/poc/key/nat.pub
+
+$terraform destroy ### To destroy the envrionment created.
 ````
 
 
