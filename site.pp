@@ -21,7 +21,7 @@ file{'/opt/apache-tomcat/webapps/companyNews.war':
 	exec{'deploy':
 		path   => '/usr/bin:/usr/sbin:/bin:/sbin',
 		command => '/bin/bash /opt/apache-tomcat*/bin/startup.sh', 
-#		unless =>  "test `ps -ef | grep tomcat |wc -l` -eq 0 " ,
+		onlyif  =>  "/bin ls /opt/apache-tomcat/webapps/companyNews.war" ,
 		}
 
 
