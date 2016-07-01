@@ -2,10 +2,17 @@
 ## ASSIGNMENT DETAILS
 ##### Version 1.0.0
 -----------------------------------
-## TRAINING
+## Problem Statement
+You need to create two environments ​one for training and one for production. You should prepare the production environments for the limited release and plan for the scale out during
+fully public release.<br />
+- The development team has a continuous integration build that produces two artifacts:​ .zip file ​ with the image and style sheet used for the application a ​.war file​ with the dynamic parts of the application. You should deploy the static assets to a web server and the .war file to a separate application server. Any compatible servers are acceptable.
+
+We will have two environments namely the _**training**_ and _**production**_ environment as per the problem statement.
+
+## TRAINING ENVIRONMENT
 
 #### INTRODUCTION !!!
-Firstly, clone the git repo shared below and then proceed.The repo will contain two directories **terraform** and **vagrant**. Kindly find the details about each file present in the repository you just cloned.
+Firstly, clone the git repository shared below and then proceed further.The repository will contain two directories **terraform** and **vagrant**. Below are the details for each directories and it's respective config files.
 
 The _Vagrantfile_ present inside vagrant folder will create a linux Vagrant [**ubuntu/trusty64**](https://vagrantcloud.com/ubuntu/boxes/trusty64/versions/20160621.0.0/providers/virtualbox.box) installing Ubuntu 14.04, post install it will also configure fewer options with passing along a shell script _provision.sh_ to configure the vagrant according to the problem given.
 
@@ -21,14 +28,20 @@ The _Vagrantfile_ present inside vagrant folder will create a linux Vagrant [**u
 #### TRAINING ENVIRONMENT
 One must have Virtualbox  and Vagrant installed on the local machine with a virtualbox image of **ubuntu/trusty64** added. You can also use the below command to add the box if you dont have.  
 
-```` 
+````
 $vagrant box add https://vagrantcloud.com/ubuntu/boxes/trusty64/versions/20160621.0.0/providers/virtualbox.box1
 ````
 
 Clone the git repository to your system under to your home directory.<br />
-```` 
+````
 $git clone -b production https://github.com/smitjainsj/project.git
 $cd project/vagrant
+````
+Kindly change the **root** value in _Vagrantfile_ to make sure you don't face stdout error.<br />
+>
+s.inline = "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' **/root/**.profile"
+>
+````
 $vagrant up --provision
 ````
 Once the vagrant is up, you can access the webapp on the URL _192.168.33.10_ .
@@ -44,12 +57,12 @@ To setup production environment I have chose below tools and technologies for se
 - Puppet: For configuration management, I used Puppet 3.4.x standalone setup to setup the server.Using standalone mode is more feasible if you have instances confiured on autoscaling as they will be created and terminated as per load.
 
 #### AWS Blueprint
-- Here we are using multi tenant setup to cater fault tolerance. I have Singapore Region since it's close to my country.Althought this can be changed in the _variables.tf_ file.
-- This will have 2 Public Subnets and 2 Private Subnets with NAT instance in Public Subnet to cater the internet needs from the instances.
+- Here we are using multi tenant setup to cater fault tolerance. For testing purpose tI have chose the **Singapore Region** althought this can be changed in the _variables.tf_ file as per the needs.
+- This will have 2 Public Subnets and 2 Private Subnets with NAT instance running in Public Subnet A Zone to cater the internet needs from the instances.
 - The instances will be private and can only be accessed via NAT instance as jump server.
 - We will require two pairs to RSA key to insert in the NAT and Application servers.To generate the keys use this [digitalocean link.](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2)
-- How to create the Infrastructure is given in later stage on this readme file.
-- Initially two application servers will creates each in avaliability zone A & B. As the CPU crosses the threshold autoscale configuration will create 2 more instances respectively to cater the needs. It will down scale the instances back to 2 as soon as the cool threshold is reached which 30% CPU Load here. All these setting can be changed and set accordingly the requirements.
+- How to use terraform to setup the AWS Infrastructure is given in later stage in this readme file.
+- Initially two application servers will be created in each avaliability zone A & B. As the CPU load crosses the threshold autoscale configuration will create 2 more instances respectively and add them to the Elastic Load Balancer. It will also scale down the instances back to 2 as soon as the cool threshold is reached which is 30% CPU Load here. All these setting can be changed and set accordingly the requirements.
 
 Puppet Modules used are as follows :-
 - Tomcat: [camptocamp](https://forge.puppet.com/camptocamp/tomcat)
@@ -59,7 +72,8 @@ We have also used _hiera.yaml_ to setup the NGINX.
 
 #### Using Terraform to setup the Production environment.
 Before moving ahead,be ready with two pairs of SSH keys and place them in a standard location.Here we will place them in **_/opt/poc/keys._**
- We have copied 4 keys in the folder which are _nat.pem, nat.pub,instance.pem and instance.pub._ <br />
+ We have copied 4 keys in the folder which are _nat, nat.pub,instance and instance.pub._
+It will also require AWS access keys to create the AWS Infrastructure. <br />
 
 ````
 cd /opt/poc
@@ -67,13 +81,20 @@ $wget https://releases.hashicorp.com/terraform/0.6.16/terraform_0.6.16_linux_amd
 $unzip /opt/terraform_0.6.16_linux_amd64.zip -P /opt
 $vim ~/.bashrc
 PATH=/opt/terraform/:$PATH
+$mkdir ~/.aws
+$cat >  ~/.aws/credentials
+
+[default]
+aws_access_key_id = xxxxxxxxxxxxxxx
+aws_secret_access_key = yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+
 $git clone -b production https://github.com/smitjainsj/project.git
 $cd project/terraform
 $terraform plan
 var.instance_key_name
   Desired name of AWS key pair
 
-  Enter a value: instance.pem
+  Enter a value: instance
 
 var.instance_public_key_path
   Path to the SSH public key to be used for authentication.
@@ -87,7 +108,7 @@ var.instance_public_key_path
 var.key_name
   Desired name of AWS key pair
 
-  Enter a value: nat.pem
+  Enter a value: nat
 
 var.public_key_path
   Path to the SSH public key to be used for authentication.
@@ -98,16 +119,16 @@ var.public_key_path
 
   Enter a value: /opt/poc/key/nat.pub
 
-$terraform destroy ### To destroy the envrionment created.
+$terraform destroy ### To destroy the environment created.
 ````
 
 
 Now relax and let the magic begin.You can login to the AWS Console after a while and check the instance getting created on the console.
 All the user-data logs will logged to the file _/var/log/user-data.log_ file.In order to access the machines, pull the elastic ip of the NAT instance from the console and use as below.<br />
 ````
-ssh -i nat.pem ec2-user@<ipaddress>
+ssh -i nat ec2-user@<ipaddress>
 ````
-Also, SCP the file PEM key of the instance to login further to the application servers.
+Also, SCP the file private key of the instance to login further to the application servers.
 To access the application just the copy the URL generated from the ELB and paste in your browser.
 
 #### Paths and Locations
